@@ -3,16 +3,25 @@ const User = require("../models/userModel");
 
 async function existingUser(id) {
   const user = await User.findByPk(id);
-  return user.state !== "Verified" ? false : true;
+  return !!user && user.state === "Asset";
 }
 
 const postPost = async (req, res) => {
   try {
-    const { userId, title, content, socialNetworks, state } = req.body;
+    const { userId, title, content, socialNetworks, postingdate, state } =
+      req.body;
+
+    if (!(await existingUser(userId))) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (Object.keys(socialNetworks).length === 0) {
+      return res.status(404).json({ error: "SocialNetworks is required" });
+    }
 
     try {
       // Iterar sobre los campos que deseas validar
-      ["userId", "title", "content", "socialNetworks"].forEach((field) => {
+      ["title", "content"].forEach((field) => {
         if (!req.body[field] || req.body[field].trim() === "") {
           throw new Error(
             `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
@@ -23,8 +32,19 @@ const postPost = async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    if (existingUser) {
-      return res.status(404).json({ error: "User not found" });
+    // Convertir la fecha actual y la fecha de publicación a una cadena en formato 'YYYY-MM-DD'
+    const currentDate = new Date().toISOString().split("T")[0];
+    const formattedPostingDate = (
+      postingdate ? new Date(postingdate) : new Date()
+    )
+      .toISOString()
+      .split("T")[0];
+
+    // Validar que la fecha de publicación sea mayor o igual a la fecha actual
+    if (formattedPostingDate < currentDate) {
+      return res.status(400).json({
+        error: "Posting date must be greater than or equal to the current date",
+      });
     }
 
     const newPost = await Post.create({
@@ -32,6 +52,7 @@ const postPost = async (req, res) => {
       title,
       content,
       socialNetworks,
+      postingdate: formattedPostingDate,
       state,
     });
     res
@@ -43,30 +64,80 @@ const postPost = async (req, res) => {
   }
 };
 
-const postGet = async (req, res) => {
+const getPosts = async (req, res) => {
   try {
-    const { id } = req.query;
-    const { state } = req.body;
+    const { state } = req.query;
 
-    if (id) {
-      const post = await Post.findByPk(id);
-      if (!post || post.state === "Delete") {
-        return res.status(404).json({ error: "Post not found" });
-      }
-      res.status(200).json(post);
-    } else {
-      const posts = await Post.findAll({ where: { state: state ?? "Posted" } });
-      res.status(200).json(posts);
+    if (state === "Delete") {
+      return res.status(200).json({});
     }
+
+    const posts = await Post.findAll({
+      where: {
+        state: state ?? "Posted",
+      },
+    });
+    res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-const postPatch = async (req, res) => {
+const getPostByID = async (req, res) => {
   try {
     const { id } = req.query;
-    const { title, content, state } = req.body;
+    if (!id) {
+      return res
+        .status(400)
+        .json({ error: "Post ID is required in query parameters" });
+    }
+
+    const post = await Post.findByPk(id);
+    if (!post || post.state === "Delete") {
+      return res.status(404).json({ error: "Post not found" });
+    }
+    return res.status(200).json(post);
+
+    res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const getPostsByUserID = async (req, res) => {
+  try {
+    const { userId, state } = req.query;
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ error: "User ID is required in query parameters" });
+    }
+
+    if (!(await existingUser(userId))) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (state === "Delete") {
+      return res.status(200).json({});
+    }
+    const posts = await Post.findAll({
+      where: { userId, state: state ?? "Posted" },
+    });
+
+    if (!posts) {
+      return res.status(404).json({ message: "Posts not found" });
+    }
+
+    return res.status(200).json(posts);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const patchPost = async (req, res) => {
+  try {
+    const { id } = req.query;
+    const { title, content, socialNetworks, postingdate, state } = req.body;
 
     if (!id) {
       return res
@@ -83,6 +154,8 @@ const postPatch = async (req, res) => {
     const dataUpdate = {
       title: title ?? post.title,
       content: content ?? post.content,
+      socialNetworks: socialNetworks ?? post.socialNetworks,
+      postingdate: postingdate ?? post.postingdate,
       state: state ?? post.state,
     };
 
@@ -95,7 +168,7 @@ const postPatch = async (req, res) => {
   }
 };
 
-const postDelete = async (req, res) => {
+const deletePost = async (req, res) => {
   try {
     const { id } = req.query;
 
@@ -113,7 +186,7 @@ const postDelete = async (req, res) => {
 
     await Post.update({ state: "Removed" }, { where: { id } });
 
-    res.status(204).json({});
+    res.status(204).json({ message: "Post delete" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
@@ -121,7 +194,9 @@ const postDelete = async (req, res) => {
 
 module.exports = {
   postPost,
-  postGet,
-  postPatch,
-  postDelete,
+  getPosts,
+  getPostByID,
+  getPostsByUserID,
+  patchPost,
+  deletePost,
 };

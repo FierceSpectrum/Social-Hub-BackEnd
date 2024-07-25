@@ -1,20 +1,19 @@
 const express = require('express');
 
 const {
-  userVerificad,
-  // userLogin,
-  userGet,
-  userPost,
-  userPatch,
-  userDelete,
+  postUser,
+  getUsers,
+  getUserByID,
+  patchUser,
+  deleteUser
 } = require('../controllers/userController');
 
 const router = express.Router();
 
-router.get('', userGet);
-router.post('', userPost);
-router.patch('', userPatch);
-router.delete('', userDelete);
-// router.get('/login', userLogin);
+router.post('', postUser);
+router.get('', getUsers);
+router.get('', getUserByID);
+router.patch('', patchUser);
+router.delete('', deleteUser);
 
 module.exports = router;

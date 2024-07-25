@@ -1,17 +1,21 @@
-const express = require('express');
+const express = require("express");
 
 const {
-    postPost,
-    postGet,
-    postPatch,
-    postDelete,
-} = require('../controllers/postController');
+  postPost,
+  getPosts,
+  getPostByID,
+  getPostsByUserID,
+  patchPost,
+  deletePost,
+} = require("../controllers/postController");
 
 const router = express.Router();
 
-router.get('', postPost);
-router.post('', postGet);
-router.patch('', postPatch);
-router.delete('', postDelete);
+router.post("", postPost);
+router.get("", getPosts);
+router.get("", getPostByID);
+router.get("", getPostsByUserID);
+router.patch("", patchPost);
+router.delete("", deletePost);
 
 module.exports = router;
