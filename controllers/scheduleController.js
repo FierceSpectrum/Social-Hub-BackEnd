@@ -24,7 +24,7 @@ const postSchedule = async (req, res) => {
     if (!(await existingUser(userId))) {
       return res.status(404).json({ error: "User not found" });
     }
-
+    let algo = ""
     try {
       // Iterar sobre los campos que deseas validar
       [
@@ -36,12 +36,15 @@ const postSchedule = async (req, res) => {
         "saturday",
         "sunday",
       ].forEach((field) => {
-        if (!req.body[field] || req.body[field].trim() === "") {
-          throw new Error(
-            `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
-          );
+        if (req.body[field] && req.body[field].trim() !== "") {
+          algo += req.body[field].trim();
         }
       });
+      if (algo.trim() === "") {
+        throw new Error(
+          'At least one date is required'
+        );
+      }
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }
@@ -78,7 +81,7 @@ const getSchedules = async (req, res) => {
 // Obtener un Schedule por ID
 const getScheduleById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.query;
     const schedule = await Schedule.findByPk(id);
 
     if (!schedule) {
@@ -94,7 +97,7 @@ const getScheduleById = async (req, res) => {
 // Obtener un Schedule por userID
 const getScheduleByUserId = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.query;
 
     // Verificar si el usuario existe
     if (!(await existingUser(userId))) {
@@ -116,7 +119,7 @@ const getScheduleByUserId = async (req, res) => {
 // Actualizar un Schedule
 const patchSchedule = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.query;
     const { monday, tuesday, wednesday, thursday, friday, saturday, sunday } =
       req.body;
 
@@ -152,7 +155,7 @@ const patchSchedule = async (req, res) => {
 // Eliminar un Schedule (modificar estado a 'Deleted')
 const deleteSchedule = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.query;
 
     if (!id) {
       return res

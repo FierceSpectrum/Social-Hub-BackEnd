@@ -13,8 +13,8 @@ const router = express.Router();
 
 router.post("", postPost);
 router.get("", getPosts);
-router.get("", getPostByID);
-router.get("", getPostsByUserID);
+router.get("/ById", getPostByID);
+router.get("/ByUserId", getPostsByUserID);
 router.patch("", patchPost);
 router.delete("", deletePost);
 

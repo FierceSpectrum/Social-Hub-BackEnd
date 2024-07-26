@@ -32,6 +32,8 @@ sequelize
     app.listen(PORT, "0.0.0.0", () =>
       console.log(`Server running on port ${PORT}!`)
     );
+    require('./scripts/publishScheduledPost');
+    require('./scripts/processQueuePost');
   })
   .catch((error) => {
     console.error("Error syncing database:", error);

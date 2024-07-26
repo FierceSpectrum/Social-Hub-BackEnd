@@ -33,18 +33,21 @@ const postPost = async (req, res) => {
     }
 
     // Convertir la fecha actual y la fecha de publicación a una cadena en formato 'YYYY-MM-DD'
-    const currentDate = new Date().toISOString().split("T")[0];
-    const formattedPostingDate = (
-      postingdate ? new Date(postingdate) : new Date()
-    )
-      .toISOString()
-      .split("T")[0];
+    const currentDate = new Date().toISOString().slice(0, 16);
+    let formattedPostingDate = "";
 
-    // Validar que la fecha de publicación sea mayor o igual a la fecha actual
-    if (formattedPostingDate < currentDate) {
-      return res.status(400).json({
-        error: "Posting date must be greater than or equal to the current date",
-      });
+    if (state === "Posted") {
+      formattedPostingDate = (postingdate ? new Date(postingdate) : new Date())
+        .toISOString()
+        .slice(0, 16);
+        
+      // Validar que la fecha de publicación sea mayor o igual a la fecha actual
+      if (formattedPostingDate < currentDate) {
+        return res.status(400).json({
+          error:
+            "Posting date must be greater than or equal to the current date",
+        });
+      }
     }
 
     const newPost = await Post.create({
@@ -97,8 +100,6 @@ const getPostByID = async (req, res) => {
       return res.status(404).json({ error: "Post not found" });
     }
     return res.status(200).json(post);
-
-    res.status(200).json(posts);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
