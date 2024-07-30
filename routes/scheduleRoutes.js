@@ -6,7 +6,7 @@ const {
   getScheduleById,
   getScheduleByUserId,
   patchSchedule,
-  deleteSchedule
+  deleteSchedule,
 } = require("../controllers/scheduleController");
 
 const router = express.Router();

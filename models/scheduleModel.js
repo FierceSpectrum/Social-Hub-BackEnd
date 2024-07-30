@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../config/database"); 
+const { sequelize } = require("../config/database");
 
 const Schedule = sequelize.define("Schedule", {
   id: {
@@ -9,6 +9,7 @@ const Schedule = sequelize.define("Schedule", {
   },
   userId: {
     type: DataTypes.INTEGER,
+    allowNull: false,
     references: {
       model: "Users",
       key: "id",

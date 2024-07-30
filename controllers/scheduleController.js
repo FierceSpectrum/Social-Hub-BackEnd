@@ -24,7 +24,7 @@ const postSchedule = async (req, res) => {
     if (!(await existingUser(userId))) {
       return res.status(404).json({ error: "User not found" });
     }
-    let algo = ""
+    let algo = "";
     try {
       // Iterar sobre los campos que deseas validar
       [
@@ -41,9 +41,7 @@ const postSchedule = async (req, res) => {
         }
       });
       if (algo.trim() === "") {
-        throw new Error(
-          'At least one date is required'
-        );
+        throw new Error("At least one date is required");
       }
     } catch (error) {
       return res.status(400).json({ error: error.message });

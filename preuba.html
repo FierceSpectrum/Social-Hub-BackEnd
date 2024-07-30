@@ -1,19 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-</head>
+  <title>Generate QR Code</title>
+  <script>
+    async function generateQRCode(event) {
+      event.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const response = await fetch('http://socialhub.codementoria.fsg/api/otp/enable-2fa', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiZW1haWwiOiJFbnBhbmFkYUFycmVAZ21haWwuY29tIiwicGVybWlzc2lvbnMiOlsiQ3JlYXRlLCBVcGRhdGUsIERlbGV0ZSJdLCJpYXQiOjE3MjIzMTM3NDAsImV4cCI6MTcyMjMyMDk0MH0.vcQZBFabcV5gZ_zmL5h8ewLEeB4wc-QU82V7XTRPOX4',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
 
+      if (response.ok) {
+        const data = await response.json();
+        document.getElementById('qr-code').src = data.qrCodeUrl;
+      } else {
+        alert('Error generating QR code');
+      }
+    }
+
+    async function verificarOTP(event) {
+      event.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const otp = document.getElementById('otp').value;
+      const response = await fetch('http://socialhub.codementoria.fsg/api/auth/login/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+          body: JSON.stringify({
+            email,
+            password: "123",
+            otp
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        document.getElementById('respuesta').innerText = JSON.stringify(data);
+      } else {
+        alert('Error verifying OTP');
+      }
+    }
+
+  </script>
+</head>
 <body>
-  <div style="display: flex; justify-content: center; padding-top: 1rem;">
-    <span
-      style="background-color: rgb(255, 16, 88); color: #ffffff; padding: 10px; border-radius: 10px; text-decoration: none; font-size: 1.2rem;">
-      Your 2FA code is ${code}
-    </span>
+  <h1>Generate QR Code</h1>
+  <form onsubmit="generateQRCode(event)">
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+    <button type="submit">Generate QR Code</button>
+  </form>
+  <div>
+    <h2>Your QR Code:</h2>
+    <img id="qr-code" alt="QR Code will appear here">
+  </div>
+  <br>
+  <br>
+  <br>
+  <form onsubmit="verificarOTP(event)">
+    <label for="number">Codigo:</label>
+    <input type="number" id="otp" name="number" required>
+    <button type="submit">Verificar Codigo</button>
+  </form>
+  <div>
+    <h2>Respuesta:</h2>
+    <p dir="respuesta"></p>
   </div>
 </body>
-
 </html>

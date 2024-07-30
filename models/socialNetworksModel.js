@@ -33,21 +33,20 @@ const SocialAccount = sequelize.define("SocialAccount", {
   },
 });
 
-
-const SocialNetwork = sequelize.define('SocialNetwork', {
+const SocialNetwork = sequelize.define("SocialNetwork", {
   userId: {
     type: Sequelize.INTEGER,
     references: {
       model: User,
-      key: 'id'
-    }
+      key: "id",
+    },
   },
   socialNetworkName: Sequelize.STRING,
   accessToken: Sequelize.STRING,
   refreshToken: Sequelize.STRING,
   publicKey: Sequelize.STRING,
   privateKey: Sequelize.STRING,
-  tokenExpirationDate: Sequelize.DATE
+  tokenExpirationDate: Sequelize.DATE,
 });
 
 module.exports = SocialAccount;

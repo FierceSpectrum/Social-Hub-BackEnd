@@ -40,7 +40,7 @@ const postPost = async (req, res) => {
       formattedPostingDate = (postingdate ? new Date(postingdate) : new Date())
         .toISOString()
         .slice(0, 16);
-        
+
       // Validar que la fecha de publicación sea mayor o igual a la fecha actual
       if (formattedPostingDate < currentDate) {
         return res.status(400).json({

@@ -1,3 +1,4 @@
+const bcrypt = require("bcrypt");
 const User = require("../models/userModel");
 const Post = require("../models/userModel");
 const Schedule = require("../models/scheduleModel");
@@ -34,6 +35,7 @@ const postUser = async (req, res) => {
     if (existingUser) {
       throw new Error("Email is already in use");
     }
+
     // Crear usuario en la base de datos
     const newUser = await User.create({
       email,
@@ -74,7 +76,7 @@ const getUserByID = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found or not Asset" });
     }
-    
+
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
@@ -101,13 +103,13 @@ const patchUser = async (req, res) => {
     }
 
     const dataUpdate = {
-      password: password ?? user.password,
-      name: name ?? user.name,
-      last_name: last_name ?? user.last_name,
+      ...(password && { password }),
+      ...(name && { name }),
+      ...(last_name && { last_name }),
     };
 
     // Actualiza los campos del usuario
-    await User.update(dataUpdate, { where: { id } });
+    await user.update(dataUpdate, { where: { id } });
     user = await User.findByPk(id);
 
     res.status(200).json(user);
@@ -122,7 +124,7 @@ const deleteUser = async (req, res) => {
 
     // Verifica si se proporciona un ID de usuario en la consulta
     if (!id) {
-      res
+      return res
         .status(400)
         .json({ error: "User ID is required in query parameters" });
     }
@@ -135,11 +137,8 @@ const deleteUser = async (req, res) => {
 
     // Actualiza el estado del usuario a inactivo y sus referencias
     await User.update({ state: "Delete" }, { where: { id } });
-    await Post.update({ state: "Delete" }, { where: { userId: id } });
-    await Schedule.update({ state: "Delete" }, { where: { userId: id } });
-
     res.status(204).json({ message: "User delete" });
-  } catch (erroe) {
+  } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }
 };

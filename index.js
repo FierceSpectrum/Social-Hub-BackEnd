@@ -3,10 +3,13 @@ const express = require("express");
 const { sequelize } = require("./config/database");
 const cors = require("cors");
 
-const twofa_otp = require("./routes/2fa_otpRoutes");
+const authRoutes = require("./routes/authRoutes");
+const otpRoutes = require("./routes/otpRoutes");
 const userRoutes = require("./routes/userRoutes");
 const postRoutes = require("./routes/postRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
+
+const { authenticateToken } = require("./middlewares/authMiddleware");
 
 const app = express();
 
@@ -17,8 +20,11 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.use("/api/2fa", twofa_otp);
+app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+
+app.use(authenticateToken);
+app.use("/api/otp", otpRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/schedules", scheduleRoutes);
 
@@ -32,8 +38,8 @@ sequelize
     app.listen(PORT, "0.0.0.0", () =>
       console.log(`Server running on port ${PORT}!`)
     );
-    require('./scripts/publishScheduledPost');
-    require('./scripts/processQueuePost');
+    require("./scripts/publishScheduledPost");
+    require("./scripts/processQueuePost");
   })
   .catch((error) => {
     console.error("Error syncing database:", error);
