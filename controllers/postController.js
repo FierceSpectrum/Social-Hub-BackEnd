@@ -1,10 +1,18 @@
 const Post = require("../models/postModel");
 const User = require("../models/userModel");
 
+const { publishToSocialNetworks } = require("../services/socialMediaService");
+
 async function existingUser(id) {
   const user = await User.findByPk(id);
   return !!user && user.state === "Asset";
 }
+
+const isValidDate = (dateString) => {
+  // Verifica si el formato es ISO 8601
+  const iso8601Pattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+  return iso8601Pattern.test(dateString);
+};
 
 const postPost = async (req, res) => {
   try {
@@ -19,9 +27,17 @@ const postPost = async (req, res) => {
       return res.status(404).json({ error: "SocialNetworks is required" });
     }
 
+    if (!["Posted", "Scheduled", "Queue"].includes(state)) {
+      return res.status(404).json({ error: "Invalid state" });
+    }
+
+    if (!isValidDate(postingdate)) {
+      return res.status(404).json({ error: "Invalid date format" });
+    }
+
     try {
       // Iterar sobre los campos que deseas validar
-      ["title", "content"].forEach((field) => {
+      ["title", "content", "state"].forEach((field) => {
         if (!req.body[field] || req.body[field].trim() === "") {
           throw new Error(
             `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
@@ -32,24 +48,30 @@ const postPost = async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    // Convertir la fecha actual y la fecha de publicación a una cadena en formato 'YYYY-MM-DD'
-    const currentDate = new Date().toISOString().slice(0, 16);
+    // Validar estado y fechas
     let formattedPostingDate = "";
-
+    const currentDate = new Date();
+    
+    // Construir la cadena en formato 'YYYY-MM-DDTHH:MM'
+    const formattedDate = currentDate.toISOString().slice(0, 10) + 'T' + currentDate.toTimeString().slice(0, 5);
+    console.log(formattedDate);
+    
     if (state === "Posted") {
-      formattedPostingDate = (postingdate ? new Date(postingdate) : new Date())
-        .toISOString()
-        .slice(0, 16);
-
-      // Validar que la fecha de publicación sea mayor o igual a la fecha actual
+      formattedPostingDate = new Date().toISOString().slice(0, 16);
+    } else if (state === "Scheduled") {
+      formattedPostingDate = "postingdate";
+      const currentDate = new Date().toISOString().slice(0, 16);
       if (formattedPostingDate < currentDate) {
         return res.status(400).json({
           error:
             "Posting date must be greater than or equal to the current date",
         });
+      } else if (formattedPostingDate === currentDate) {
+        state = "Posted";
       }
     }
 
+    // Crear nuevo post
     const newPost = await Post.create({
       userId,
       title,
@@ -58,6 +80,17 @@ const postPost = async (req, res) => {
       postingdate: formattedPostingDate,
       state,
     });
+
+    // Publicar si el estado es 'Posted'
+    if (state === "Posted") {
+      const result = await publishToSocialNetworks(newPost);
+      if (!result.success) {
+        newPost.state = "Failed";
+        newPost.socialNetworks = result.socialNetworks;
+        await newPost.save();
+      }
+    }
+
     res
       .status(201)
       .header({ location: `/api/posts?id=${newPost.id}` })
@@ -152,6 +185,10 @@ const patchPost = async (req, res) => {
       return res.status(404).json({ error: "Post not found" });
     }
 
+    if (!isValidDate(postingdate)) {
+      return res.status(404).json({ error: "Invalid date format" });
+    }
+
     const dataUpdate = {
       title: title ?? post.title,
       content: content ?? post.content,
@@ -185,7 +222,7 @@ const deletePost = async (req, res) => {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    await Post.update({ state: "Removed" }, { where: { id } });
+    await Post.update({ state: "Delete" }, { where: { id } });
 
     res.status(204).json({ message: "Post delete" });
   } catch (error) {

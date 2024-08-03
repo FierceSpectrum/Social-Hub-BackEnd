@@ -19,7 +19,10 @@ const Post = sequelize.define("Post", {
   },
   title: DataTypes.STRING,
   content: DataTypes.TEXT,
-  postingdate: DataTypes.TEXT,
+  postingdate: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   socialNetworks: DataTypes.JSON, // Puede ser un array o JSON
   state: {
     type: DataTypes.STRING,

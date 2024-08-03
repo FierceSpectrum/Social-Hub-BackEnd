@@ -1,7 +1,8 @@
 const cron = require("node-cron");
-const { Op } = require("sequelize");
 const Post = require("../models/postModel");
 const Schedule = require("../models/scheduleModel");
+
+const { publishToSocialNetworks } = require("../services/socialMediaService");
 
 const days = [
   "sunday",
@@ -16,8 +17,8 @@ const days = [
 const checkQueuedPosts = async () => {
   const currentDate = new Date();
   const currentDay = days[currentDate.getDay()];
-  const currentTime = `${currentDate.getHours()}:${currentDate.getMinutes()}`;
-  // console.log(`Checking posts at: ${currentTime} on ${currentDay}`);
+  const currentTime = `${String(currentDate.getHours()).padStart(2, '0')}:${String(currentDate.getMinutes()).padStart(2, '0')}`;
+    console.log(`Checking posts at: ${currentTime} on ${currentDay}`);
 
   try {
     // Obtener todos los posts en cola
@@ -50,14 +51,27 @@ const checkQueuedPosts = async () => {
       }
 
       const postTimes = scheduleForToday.split("/");
-      // console.log(postTimes);
+      console.log(postTimes);
       if (postTimes.includes(currentTime)) {
         console.log(
           `Post ${post.id} by user ${post.userId} should be posted now.`
         );
-        // Aquí puedes agregar la lógica para postear el contenido
+
+        const result = await publishToSocialNetworks(post);
+
+        let state = "Posted";
+
+        if (!result.success) {
+          state = "Failed";
+        }
+
         const formattedDate = currentDate.toISOString().slice(0, 16);
-        await post.update({ state: "Posted", postingdate: formattedDate });
+
+        await post.update({
+          state,
+          postingdate: formattedDate,
+          socialNetworks: result.socialNetworks ?? post.socialNetworks,
+        });
       }
     }
   } catch (error) {

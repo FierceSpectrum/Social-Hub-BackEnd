@@ -8,6 +8,7 @@ const otpRoutes = require("./routes/otpRoutes");
 const userRoutes = require("./routes/userRoutes");
 const postRoutes = require("./routes/postRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
+const mastodonUserRoutes = require("./routes/mastodonUserRoutes");
 
 const { authenticateToken } = require("./middlewares/authMiddleware");
 
@@ -27,6 +28,7 @@ app.use(authenticateToken);
 app.use("/api/otp", otpRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/schedules", scheduleRoutes);
+app.use("/api/mastodonUser", mastodonUserRoutes);
 
 // Sincroniza los modelos con la base de datos
 sequelize
