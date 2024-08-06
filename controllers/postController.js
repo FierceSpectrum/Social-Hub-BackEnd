@@ -2,6 +2,8 @@ const Post = require("../models/postModel");
 const User = require("../models/userModel");
 
 const { publishToSocialNetworks } = require("../services/socialMediaService");
+const { getAccessToken } = require("../services/redditService");
+const { formatDate } = require("../utils/dateUtils");
 
 async function existingUser(id) {
   const user = await User.findByPk(id);
@@ -31,10 +33,6 @@ const postPost = async (req, res) => {
       return res.status(404).json({ error: "Invalid state" });
     }
 
-    if (!isValidDate(postingdate)) {
-      return res.status(404).json({ error: "Invalid date format" });
-    }
-
     try {
       // Iterar sobre los campos que deseas validar
       ["title", "content", "state"].forEach((field) => {
@@ -51,16 +49,15 @@ const postPost = async (req, res) => {
     // Validar estado y fechas
     let formattedPostingDate = "";
     const currentDate = new Date();
-    
-    // Construir la cadena en formato 'YYYY-MM-DDTHH:MM'
-    const formattedDate = currentDate.toISOString().slice(0, 10) + 'T' + currentDate.toTimeString().slice(0, 5);
-    console.log(formattedDate);
-    
+
     if (state === "Posted") {
-      formattedPostingDate = new Date().toISOString().slice(0, 16);
+      formattedPostingDate = formatDate();
     } else if (state === "Scheduled") {
-      formattedPostingDate = "postingdate";
-      const currentDate = new Date().toISOString().slice(0, 16);
+      if (!isValidDate(postingdate)) {
+        return res.status(404).json({ error: "Invalid date format" });
+      }
+
+      formattedPostingDate = postingdate;
       if (formattedPostingDate < currentDate) {
         return res.status(400).json({
           error:
@@ -200,8 +197,9 @@ const patchPost = async (req, res) => {
     await Post.update(dataUpdate, { where: { id } });
     post = await Post.findByPk(id);
 
-    res.state(200).json(post);
+    res.status(200).json(post);
   } catch (error) {
+    console.error("psotController/patch: ", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

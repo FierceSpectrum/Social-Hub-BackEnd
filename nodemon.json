@@ -1,6 +1,4 @@
 {
-"watch": ["src"],
-"ext": "js,json",
-"ignore": ["public/*"],
-"exec": "node index.js"
+"watch": ["."],
+"ext": "js,json"
 }

@@ -3,6 +3,8 @@ const Post = require("../models/postModel");
 const Schedule = require("../models/scheduleModel");
 
 const { publishToSocialNetworks } = require("../services/socialMediaService");
+const { getAccessToken } = require("../services/redditService");
+const { formatDate } = require("../utils/dateUtils");
 
 const days = [
   "sunday",
@@ -17,8 +19,11 @@ const days = [
 const checkQueuedPosts = async () => {
   const currentDate = new Date();
   const currentDay = days[currentDate.getDay()];
-  const currentTime = `${String(currentDate.getHours()).padStart(2, '0')}:${String(currentDate.getMinutes()).padStart(2, '0')}`;
-    console.log(`Checking posts at: ${currentTime} on ${currentDay}`);
+  const currentTime = `${String(currentDate.getHours()).padStart(
+    2,
+    "0"
+  )}:${String(currentDate.getMinutes()).padStart(2, "0")}`;
+  console.log(`Checking posts at: ${currentTime} on ${currentDay}`);
 
   try {
     // Obtener todos los posts en cola
@@ -38,7 +43,9 @@ const checkQueuedPosts = async () => {
     for (const userId in userPosts) {
       const post = userPosts[userId];
       // console.log(post.dataValues);
-      const userSchedule = await Schedule.findOne({ where: { userId } });
+      const userSchedule = await Schedule.findOne({
+        where: { userId, state: "Created" },
+      });
 
       if (!userSchedule) {
         console.log(`User ${post.userId} does not have a schedule.`);
@@ -65,13 +72,11 @@ const checkQueuedPosts = async () => {
           state = "Failed";
         }
 
-        const formattedDate = currentDate.toISOString().slice(0, 16);
-
-        await post.update({
-          state,
-          postingdate: formattedDate,
-          socialNetworks: result.socialNetworks ?? post.socialNetworks,
-        });
+        const formattedDate = formatDate();
+        post.state = state;
+        post.postingdate = formattedDate;
+        post.socialNetworks = result.socialNetworks;
+        await post.save();
       }
     }
   } catch (error) {

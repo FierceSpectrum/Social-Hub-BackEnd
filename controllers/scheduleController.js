@@ -24,6 +24,11 @@ const postSchedule = async (req, res) => {
     if (!(await existingUser(userId))) {
       return res.status(404).json({ error: "User not found" });
     }
+    // const scheduleUser = await Schedule.findOne({ where : {userId}})
+    // if (scheduleUser){
+    //   return res.status(404).json({ error: "Only have one Schedule" });
+    // }
+    
     let algo = "";
     try {
       // Iterar sobre los campos que deseas validar
@@ -61,6 +66,10 @@ const postSchedule = async (req, res) => {
 
     res.status(201).json(newSchedule);
   } catch (error) {
+    if (error.message === 'User already has a created schedule') {
+      return res.status(400).json({ error: "User already has a created schedule" });
+    }
+    console.error("Error creating schedule:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -145,8 +154,11 @@ const patchSchedule = async (req, res) => {
 
     res.status(200).json(schedule);
   } catch (error) {
-    console.error("Error en updateSchedule:", error);
-    res.status(500).json({ message: "Error al actualizar el Schedule" });
+    if (error.message === 'User already has a created schedule') {
+      return res.status(400).json({ error: "User already has a created schedule" });
+    }
+    console.error("Error updating schedule:", error.message);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 

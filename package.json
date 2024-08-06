@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "nodemon index.js"
   },
   "author": "Benjamín Sandí",
   "license": "ISC",
@@ -26,6 +26,10 @@
     "qrcode": "^1.5.3",
     "sequelize": "^6.37.3",
     "speakeasy": "^2.0.0",
-    "twit": "^2.2.11"
+    "twit": "^2.2.11",
+    "uuid": "^8.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
   }
 }

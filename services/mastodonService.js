@@ -1,23 +1,24 @@
-const fetch = require("node-fetch");
 const MastodonUser = require("../models/mastodonUserModel");
 
-const clientId = process.env.YOUR_CLIENT_ID;
-const clientSecret = process.env.YOUR_CLIENT_SECRET;
-const redirectUri = process.env.REDIRECT_URL;
-const mastodonUrl = process.env.MASTODON_URL;
+const {
+  MASTODON_CLIENT_ID,
+  MASTODON_CLIENT_SECRET,
+  MASTODON_REDIRECT_URI,
+  MASTODON_URL,
+} = process.env;
 
 // Paso 1: Obtener el token de acceso usando el código de autorización
 async function getAccessToken(authorizationCode) {
   try {
     const formBody = new URLSearchParams({
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: redirectUri,
+      client_id: MASTODON_CLIENT_ID,
+      client_secret: MASTODON_CLIENT_SECRET,
+      redirect_uri: MASTODON_REDIRECT_URI,
       code: authorizationCode,
       grant_type: "authorization_code",
     });
 
-    const response = await fetch(`${mastodonUrl}/oauth/token`, {
+    const response = await fetch(`${MASTODON_URL}/oauth/token`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -38,12 +39,14 @@ async function getAccessToken(authorizationCode) {
 
 async function postStatus(userId, status) {
   try {
-    const mastodonUser = await MastodonUser.findOne({ where: { userId } });
+    const mastodonUser = await MastodonUser.findOne({
+      where: { userId, state: "Activated" },
+    });
     if (!mastodonUser) {
       throw new Error("User not found");
     }
 
-    const response = await fetch(`${mastodonUrl}/api/v1/statuses`, {
+    const response = await fetch(`${MASTODON_URL}/api/v1/statuses`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${mastodonUser.accessToken}`,
@@ -64,6 +67,12 @@ async function postStatus(userId, status) {
     return { success: true, response: data };
   } catch (error) {
     console.error("Error al publicar el post:", error.message);
+    await MastodonUser.save(
+      {
+        state: "Delete",
+      },
+      { where: { userId } }
+    );
     return { success: false };
   }
 }

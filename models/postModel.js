@@ -23,7 +23,10 @@ const Post = sequelize.define("Post", {
     type: DataTypes.STRING,
     allowNull: true,
   },
-  socialNetworks: DataTypes.JSON, // Puede ser un array o JSON
+  socialNetworks: {
+    type: DataTypes.JSON,
+    allowNull: true,
+  },
   state: {
     type: DataTypes.STRING,
     defaultValue: "Pendig",

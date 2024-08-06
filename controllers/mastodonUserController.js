@@ -1,5 +1,4 @@
 const MastodonUser = require("../models/mastodonUserModel");
-const Post = require("../models/postModel");
 const { getAccessToken } = require("../services/mastodonService");
 
 const upsertMastodonUser = async (req, res) => {
