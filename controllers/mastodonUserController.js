@@ -7,13 +7,30 @@ const upsertMastodonUser = async (req, res) => {
 
   try {
     const data = await getAccessToken(authorizationCode);
-    // Almacenar el usuario y el token en la base de datos
-    await MastodonUser.upsert({
+
+    const mastodonUser = await MastodonUser.findOne({
+      where: { userId: user.id },
+    });
+
+    if (mastodonUser) {
+      await MastodonUser.update(
+        { accessToken: data.access_token, state: "Activated" },
+        { where: { id: mastodonUser.id } }
+      );
+
+      const updateMastodonUser = await MastodonUser.findOne({
+        where: { userId: user.id },
+      });
+
+      return res.status(200).json(updateMastodonUser);
+    }
+
+    const newMastodonUser = await MastodonUser.create({
       userId: user.id,
       accessToken: data.access_token,
     });
 
-    res.status(200).json(data); // Devuelve el token y otros datos que quieras
+    res.status(200).json(newMastodonUser); // Devuelve el token y otros datos que quieras
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -59,20 +76,20 @@ const getMastodonUserByUserID = async (req, res) => {
 
 const deleteMastodonUser = async (req, res) => {
   try {
-    const { id } = req.body;
+    const { user } = req;
 
-    if (!id) {
-      return res
-        .status(400)
-        .json({ error: "MastodonUser ID is required in query parameters" });
-    }
+    const mastodonUser = await MastodonUser.findOne({
+      where: { userId: user.id, state: "Activated" },
+    });
 
-    const mastodonUser = await MastodonUser.findByPk(id);
-    if (!mastodonUser || mastodonUser.state === "Delete") {
+    if (!mastodonUser) {
       return res.status(404).json({ error: "MastodonUser not found" });
     }
 
-    await MastodonUser.update({ state: "Delete" }, { where: { id } });
+    await MastodonUser.update(
+      { state: "Delete" },
+      { where: { id: mastodonUser.id } }
+    );
 
     res.status(204).json({ message: "MastodonUser delete" });
   } catch (error) {
@@ -80,9 +97,18 @@ const deleteMastodonUser = async (req, res) => {
   }
 };
 
+const checkMastodonUser = async (userId) => {
+  const mastodonUser = await MastodonUser.findOne({
+    where: { userId, state: "Activated" },
+  });
+
+  return !mastodonUser ? false : true;
+};
+
 module.exports = {
   upsertMastodonUser,
   getMastodonUsers,
   getMastodonUserByUserID,
   deleteMastodonUser,
+  checkMastodonUser,
 };

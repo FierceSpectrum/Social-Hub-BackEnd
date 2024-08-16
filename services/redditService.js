@@ -7,8 +7,6 @@ const {
   REDDIT_URL,
 } = process.env;
 
-const REDDIT_AUTHORIZATION_CODE = "7MHgFrIEIJyxy_fyp1z8E07av8Z3Xg";
-
 // Paso 1: Obtener el token de acceso usando el código de autorización
 
 async function getAccessToken(authorizationCode) {
@@ -30,7 +28,6 @@ async function getAccessToken(authorizationCode) {
   const data = await response.json();
 
   if (response.ok) {
-    console.log("Access Token:", data.access_token);
     return data;
   } else {
     console.error("Error getting access token:", data);
@@ -70,9 +67,9 @@ async function postStatus(userId, title, text, sr) {
     return { success: true, response: data };
   } catch (error) {
     console.error("Error al publicar el post:", error.message);
-    await RedditUser.save(
+    await RedditUser.update(
       {
-        state: "Delete",
+        state: "Expired",
       },
       { where: { userId } }
     );

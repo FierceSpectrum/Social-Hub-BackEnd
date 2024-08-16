@@ -10,6 +10,7 @@ const postRoutes = require("./routes/postRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const mastodonUserRoutes = require("./routes/mastodonUserRoutes");
 const redditUserRoutes = require("./routes/redditUserRoutes");
+const socialMediaRoutes = require("./routes/socialMediaRoutes");
 
 const { authenticateToken } = require("./middlewares/authMiddleware");
 
@@ -31,6 +32,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/mastodonUser", mastodonUserRoutes);
 app.use("/api/redditUser", redditUserRoutes);
+app.use("/api/social-media", socialMediaRoutes);
 
 // Sincroniza los modelos con la base de datos
 sequelize

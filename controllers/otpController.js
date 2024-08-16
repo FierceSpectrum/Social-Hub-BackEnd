@@ -1,5 +1,6 @@
 const { generateQRCode } = require("../services/otpService");
 const User = require("../models/userModel");
+const { verifyOTP } = require("../services/otpService");
 
 const enable2FA = async (req, res) => {
   try {
@@ -24,7 +25,28 @@ const disable2FA = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+const checkOTP = async (req, res) => {
+  try {
+    const { user } = req;
+    const { otp } = req.body;
+
+    const otpValid = await verifyOTP(user, otp);
+
+    if (!otpValid) {
+      return res.status(200).json({ otpValid: false });
+    }
+
+    await User.update({ is2FAEnabled: true }, { where: { id: user.id } });
+
+    res.status(200).json({ otpValid: true });
+  } catch (error) {
+    res.status(401).json({ error: error.message });
+  }
+};
+
 module.exports = {
   enable2FA,
   disable2FA,
+  checkOTP,
 };

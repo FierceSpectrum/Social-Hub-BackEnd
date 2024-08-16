@@ -18,7 +18,7 @@ const generateQRCode = async (email) => {
 
   // Actualiza el secreto del usuario en la base de datos
   await User.update(
-    { otpSecret: secret.base32, is2FAEnabled: true },
+    { otpSecret: secret.base32},
     { where: { email } }
   );
 

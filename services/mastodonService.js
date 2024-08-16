@@ -3,7 +3,7 @@ const MastodonUser = require("../models/mastodonUserModel");
 const {
   MASTODON_CLIENT_ID,
   MASTODON_CLIENT_SECRET,
-  MASTODON_REDIRECT_URI,
+  MASTODON_REDIRECT_URL,
   MASTODON_URL,
 } = process.env;
 
@@ -13,7 +13,7 @@ async function getAccessToken(authorizationCode) {
     const formBody = new URLSearchParams({
       client_id: MASTODON_CLIENT_ID,
       client_secret: MASTODON_CLIENT_SECRET,
-      redirect_uri: MASTODON_REDIRECT_URI,
+      redirect_uri:  MASTODON_REDIRECT_URL,
       code: authorizationCode,
       grant_type: "authorization_code",
     });
@@ -67,9 +67,9 @@ async function postStatus(userId, status) {
     return { success: true, response: data };
   } catch (error) {
     console.error("Error al publicar el post:", error.message);
-    await MastodonUser.save(
+    await MastodonUser.update(
       {
-        state: "Delete",
+        state: "Expired",
       },
       { where: { userId } }
     );

@@ -111,7 +111,7 @@ const getScheduleByUserId = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const schedule = await Schedule.findOne({ where: { userId } });
+    const schedule = await Schedule.findOne({ where: { userId, state: "Created" } });
 
     if (!schedule) {
       return res.status(404).json({ message: "Schedule not found" });

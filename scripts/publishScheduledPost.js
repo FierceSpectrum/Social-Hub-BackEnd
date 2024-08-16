@@ -28,7 +28,7 @@ const checkScheduledPosts = async () => {
       post.state = state;
       post.socialNetworks = socialNetworks;
       console.log(post);
-      await post.save();
+      await Post.update(post.dataValues, { where: { id: post.id } });
     });
   } catch (error) {
     console.error("Error checking scheduled posts:", error);
