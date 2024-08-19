@@ -86,11 +86,10 @@ const postPost = async (req, res) => {
       const result = await publishToSocialNetworks(newPost);
       if (!result.success) {
         newPost.state = "Failed";
-        newPost.socialNetworks = result.socialNetworks;
       }
       newPost.socialNetworks = result.socialNetworks;
     }
-    await Post.update(newPost, { where: { id: newPost.id } });
+    await Post.update(newPost.dataValues, { where: { id: newPost.id } });
 
     res
       .status(201)

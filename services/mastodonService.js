@@ -13,7 +13,7 @@ async function getAccessToken(authorizationCode) {
     const formBody = new URLSearchParams({
       client_id: MASTODON_CLIENT_ID,
       client_secret: MASTODON_CLIENT_SECRET,
-      redirect_uri:  MASTODON_REDIRECT_URL,
+      redirect_uri: MASTODON_REDIRECT_URL,
       code: authorizationCode,
       grant_type: "authorization_code",
     });
@@ -42,6 +42,7 @@ async function postStatus(userId, status) {
     const mastodonUser = await MastodonUser.findOne({
       where: { userId, state: "Activated" },
     });
+
     if (!mastodonUser) {
       throw new Error("User not found");
     }
